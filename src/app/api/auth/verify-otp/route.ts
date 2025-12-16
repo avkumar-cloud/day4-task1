@@ -6,12 +6,13 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "@/lib/jwt";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
-    const { email, otp } = await req.json();
+    const { email, otp, password } = await req.json();
 
     if (!email || !otp) {
       return NextResponse.json(
@@ -21,6 +22,19 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await User.findOne({ email });
+
+    if(!user) return NextResponse.json(
+      {message:"Invalid User"},
+      {status: 400}
+    );
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+    return NextResponse.json(
+      { message: "Invalid credentials" },
+      { status: 401 }
+    );
+  }
 
     if (
       !user ||

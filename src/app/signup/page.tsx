@@ -13,13 +13,14 @@ export default function SignupPage() {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [step, setStep] = useState<"form" | "otp">("form");
   const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
 
   const sendOtp = async () => {
     setError("");
     const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role }),
+      body: JSON.stringify({ email,password, role }),
     });
 
     if (!res.ok) return setError("Failed to send OTP");
@@ -30,7 +31,7 @@ export default function SignupPage() {
     const res = await fetch("/api/auth/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp: otp.join("") }),
+      body: JSON.stringify({ email, password,otp: otp.join("") }),
     });
 
     const data = await res.json();
@@ -54,6 +55,14 @@ export default function SignupPage() {
             className="w-full p-3 rounded bg-gray-800 text-white mb-4 outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 rounded bg-gray-800 text-white mb-4 outline-none"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
           <select

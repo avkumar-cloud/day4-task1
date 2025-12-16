@@ -20,7 +20,7 @@ export default function Navbar() {
       <div className="flex gap-4 items-center">
         {!user ? (
           <>
-            <Link href="/login">Login</Link>
+            <Link href="/login" className="bg-indigo-600 px-4 py-2 rounded text-white">Login</Link>
             <Link href="/signup" className="bg-indigo-600 px-4 py-2 rounded text-white">Sign Up</Link>
           </>
         ) : (

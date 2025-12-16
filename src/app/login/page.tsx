@@ -1,7 +1,8 @@
 // app/login/page.tsx
-"use client";
+"use client";//use client client 
+import Link from "next/link";// link a 
 
-import { useState } from "react";
+import { useState } from "react";// 
 import AuthCard from "@/components/AuthCard";
 import OTPInput from "@/components/OTPInput";
 import { useRouter } from "next/navigation";
@@ -14,25 +15,26 @@ export default function LoginPage() {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [step, setStep] = useState<"email" | "otp">("email");
   const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
 
   const sendOtp = async () => {
     setError("");
     const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email,password }),
     });
 
     if (!res.ok) return setError("Failed to send OTP");
-    setStep("otp");
+    setStep("otp");// 
   };
 
   const verifyOtp = async () => {
     setError("");
     const res = await fetch("/api/auth/verify-otp", {
-      method: "POST",
+      method: "POST",//2
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp: otp.join("") }),
+      body: JSON.stringify({ email,password, otp: otp.join("") }),
     });
 
     const data = await res.json();
@@ -57,13 +59,25 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 rounded bg-gray-800 text-white mb-4 outline-none"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <button
             onClick={sendOtp}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded"
           >
             Send OTP
           </button>
+          <Link
+          href="/resetPassword"
+          className="block text-sm text-indigo-400 hover:underline text-center mt-4"
+          >
+            Forgot password?
+          </Link>
         </>
       )}
 

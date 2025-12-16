@@ -7,15 +7,17 @@ import jwt from "jsonwebtoken";
 
 export async function POST(req: NextRequest) {
   try {
+
     await connectDB();
 
-    // 🔐 Verify admin
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  
+    const token = req.headers.get("Authorization")?.split(" ")[1];//1
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });// error handler
 
     const payload: any = jwt.verify(token, process.env.ACCESS_SECRET!);
     if (payload.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      // return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return ""//3
     }
 
     const { targetRole, subject, message } = await req.json();
