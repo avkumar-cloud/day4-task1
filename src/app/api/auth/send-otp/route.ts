@@ -5,28 +5,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import { sendEmail } from "@/utils/sendEmail";
+import { AppError } from "@/lib/AppError";
+import { ERROR_CODES } from "@/lib/errorCodes";
+import { apiHandler } from "@/lib/apiHandler";
 
-export async function POST(req: NextRequest) {
-  try {
-    await connectDB();
+export const POST = apiHandler(async(req:NextRequest)=>{
+   await connectDB();
 
     const { email, role , password} = await req.json();
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email or Password is required" },
-        { status: 400 }
-      );
+      throw new AppError(
+        ERROR_CODES.VALIDATION_ERROR,"Email or Password missing",400
+      )
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     let user = await User.findOne({ email });
 
     if (role) {
       if (user) {
-        return NextResponse.json(
-          { error: "User already exists. Please login." },
-          { status: 400 }
-        );
+        throw new AppError(
+          ERROR_CODES.USER_ALREADY_EXISTS,"User already Exist",400
+        )
       }
       
       user = await User.create({
@@ -37,10 +37,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (!role && !user) {
-      return NextResponse.json(
-        { error: "User not found. Please sign up." },
-        { status: 404 }
-      );
+      throw new AppError(
+        ERROR_CODES.USER_NOT_FOUND,"User not found",404
+      )
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -52,11 +51,8 @@ export async function POST(req: NextRequest) {
     await sendEmail(email, `Your OTP is ${otp}`);
 
     return NextResponse.json({ message: "OTP sent successfully" });
-  } catch (error) {
-    console.error("SEND OTP ERROR:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+}) 
+  
+   
+   
+

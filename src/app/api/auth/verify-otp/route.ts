@@ -2,38 +2,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-} from "@/lib/jwt";
+import {  generateAccessToken,  generateRefreshToken,} from "@/lib/jwt";
 import bcrypt from "bcryptjs";
+import { ERROR_CODES } from "@/lib/errorCodes";
+import { AppError } from "@/lib/AppError";
+import { apiHandler } from "@/lib/apiHandler";
 
-export async function POST(req: NextRequest) {
-  try {
-    await connectDB();
+export const POST = apiHandler(async (req:NextRequest)=>{
+  await connectDB();
 
     const { email, otp, password } = await req.json();
 
     if (!email || !otp) {
-      return NextResponse.json(
-        { error: "Email and OTP are required" },
-        { status: 400 }
-      );
+      throw new AppError(
+        ERROR_CODES.VALIDATION_ERROR,"Email or OTP missing",400
+      )
     }
 
     const user = await User.findOne({ email });
 
-    if(!user) return NextResponse.json(
-      {message:"Invalid User"},
-      {status: 400}
-    );
+    if(!user) {
+      throw new AppError(
+        ERROR_CODES.USER_NOT_FOUND,"User not found",404
+      )
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-    return NextResponse.json(
-      { message: "Invalid credentials" },
-      { status: 401 }
-    );
+    throw new AppError(
+      ERROR_CODES.INVALID_CREDENTIAL,"Email or Passoword Mismatch",401
+    )
   }
 
     if (
@@ -42,10 +40,9 @@ export async function POST(req: NextRequest) {
       !user.otpExpires ||
       user.otpExpires < new Date()
     ) {
-      return NextResponse.json(
-        { error: "Invalid or expired OTP" },
-        { status: 400 }
-      );
+      throw new AppError(
+        ERROR_CODES.AUTH_OTP_EXPIRED, "Invalid OTP or OTP expired",400
+      )
     }
 
     const accessToken = generateAccessToken({
@@ -83,11 +80,8 @@ export async function POST(req: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error("VERIFY OTP ERROR:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+  
+}) 
+  
+    
+

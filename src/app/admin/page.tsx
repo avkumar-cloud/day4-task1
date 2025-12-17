@@ -1,6 +1,7 @@
 // app/admin/bulk-email/page.tsx
 "use client";
 
+import { authFetch } from "@/utils/authFetch";
 import { useState } from "react";
 
 export default function BulkEmailPage() {
@@ -9,18 +10,19 @@ export default function BulkEmailPage() {
   const [message, setMessage] = useState("");
 
   const sendEmails = async () => {
-    const token = localStorage.getItem("accessToken");
-
-    const res = await fetch("/api/admin/send-bulk-email", {
+    const res = await authFetch("/api/admin/send-bulk-email", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ targetRole: role, subject, message }),
     });
 
-    if (res.ok) alert("Emails sent successfully!");
+    if (res.ok) {
+      alert("Emails sent successfully!");
+      setSubject("");
+      setMessage("");
+    }
     else alert("Failed to send emails");
   };
 

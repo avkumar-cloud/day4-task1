@@ -1,30 +1,31 @@
 export const runtime = "nodejs";
 import * as crypto from "crypto";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import { sendEmail } from "@/utils/sendEmail";
+import { AppError } from "@/lib/AppError";
+import { ERROR_CODES } from "@/lib/errorCodes";
+import { apiHandler } from "@/lib/apiHandler";
 
-export async function POST(req: NextRequest) {
-  try {
-    await connectDB();// db conenct 
+export const POST=apiHandler(async(req) =>{
+
+    await connectDB();
 
     const { email } = await req.json();
 
     if (!email) {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
+      throw new AppError(
+        ERROR_CODES.VALIDATION_ERROR,"Email Required",400
+      )
     }
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "No account found with this email" },
-        { status: 404 }
-      );
+      throw new AppError(
+        ERROR_CODES.USER_NOT_FOUND,"User not found",404
+      )
     }
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -41,11 +42,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ message: "Reset link sent to email" });
-  } catch (error) {
-    console.error("RESET PASSWORD ERROR:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+   
+    
+  
+})

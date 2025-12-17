@@ -1,19 +1,20 @@
 export const runtime = "nodejs";
 
-import { NextRequest, NextResponse } from "next/server";
+import {  NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import { AppError } from "@/lib/AppError";
+import { ERROR_CODES } from "@/lib/errorCodes";
+import { apiHandler } from "@/lib/apiHandler";
 
-export async function POST(req: NextRequest) {
-  try {
-    await connectDB();// db connect 
+export const POST=apiHandler(async(req)=>{
+  await connectDB();// db connect 
     const { token, password } = await req.json();
 
     if (!token || !password) {
-      return NextResponse.json(
-        { error: "Invalid request" },
-        { status: 400 }
-      );
+      throw new AppError(
+        ERROR_CODES.AUTH_UNAUTHORIZED,"Invalid request",400
+      )
     }
 
     const user = await User.findOne({
@@ -22,10 +23,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Token is invalid or expired" },
-        { status: 400 }
-      );
+      throw new AppError(
+        ERROR_CODES.AUTH_TOKEN_EXPIRED,"OTP invalid or expired",404
+      )
     }
 
     user.password = password; // auto-hashed by pre-save hook
@@ -34,11 +34,10 @@ export async function POST(req: NextRequest) {
     await user.save();
 
     return NextResponse.json({ message: "Password reset successful" });
-  } catch (error) {
-    console.error("CONFIRM RESET ERROR:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+}) 
+  
+    
+   
+    
+  
+
